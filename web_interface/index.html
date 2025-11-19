@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Live Viewer</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <script>
+        // Wait for jQuery and Chessboard to be available
+        function waitForChessboard(callback, maxAttempts = 50) {
+            let attempts = 0;
+            const checkInterval = setInterval(() => {
+                attempts++;
+                if (typeof jQuery !== 'undefined' && typeof Chessboard !== 'undefined') {
+                    clearInterval(checkInterval);
+                    console.log('jQuery and Chessboard.js loaded after', attempts, 'attempts');
+                    callback();
+                } else if (attempts >= maxAttempts) {
+                    clearInterval(checkInterval);
+                    console.error('Libraries failed to load after', maxAttempts, 'attempts');
+                    console.log('jQuery:', typeof jQuery !== 'undefined', 'Chessboard:', typeof Chessboard !== 'undefined');
+                }
+            }, 100);
+        }
+        
+        // Initialize board when libraries are loaded
+        function initChessBoard() {
+            if (typeof Chessboard === 'undefined') {
+                console.error('Chessboard.js still not available');
+                return;
+            }
+            
+            // Temporarily show container to initialize board with proper dimensions
+            const container = document.getElementById('boardContainer');
+            const wasHidden = container.style.display === 'none';
+            if (wasHidden) {
+                container.style.display = 'block';
+            }
+            
+            try {
+                window.chessBoardInstance = Chessboard('chessBoard', {
+                    position: 'start',
+                    draggable: false,
+                    pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
+                    onDragStart: function() { return false; }
+                });
+                console.log('Chessboard initialized successfully');
+            } catch (error) {
+                console.error('Error initializing chessboard:', error);
+            }
+            
+            // Hide container again if it was hidden
+            if (wasHidden) {
+                container.style.display = 'none';
+            }
+        }
+        
+        // Wait for Chessboard to load, then initialize
+        waitForChessboard(initChessBoard);
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Chess Live Viewer</h1>
+            <p class="subtitle">Enter a game ID to view live chess positions</p>
+        </header>
+
+        <div class="game-id-section">
+            <div class="input-group">
+                <input 
+                    type="text" 
+                    id="gameIdInput" 
+                    placeholder="Enter game ID" 
+                    autocomplete="off"
+                >
+                <button id="connectBtn" onclick="connectToGame()">Connect</button>
+            </div>
+            <div id="status" class="status"></div>
+        </div>
+
+        <div id="boardContainer" class="board-container" style="display: none;">
+            <div id="chessBoard" style="width: 400px; height: 400px; margin: 0 auto;"></div>
+            <div class="info-panel">
+                <div class="info-item">
+                    <label>Current FEN:</label>
+                    <code id="currentFen">-</code>
+                </div>
+                <div class="info-item">
+                    <label>Last Update:</label>
+                    <span id="lastUpdate">-</span>
+                </div>
+                <div class="info-item">
+                    <label>Move Count:</label>
+                    <span id="moveCount">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+
